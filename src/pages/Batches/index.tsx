@@ -162,8 +162,8 @@ export default function Batches() {
             </div>
           </div>
           <div className="mt-3 flex items-center gap-1 text-xs text-green-600">
-            <TrendingUp className="w-3 h-3" />
-            <span>预计收益+15%</span>
+            <CalendarDays className="w-3 h-3" />
+            <span>{monthLabel}</span>
           </div>
         </div>
       </div>

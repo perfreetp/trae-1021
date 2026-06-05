@@ -33,6 +33,7 @@ export default function MainLayout() {
   const getCurrentPageTitle = () => {
     const pathname = location.pathname;
     if (pathname === '/') return navItems[0].label;
+    if (pathname.startsWith('/pool/')) return '池位详情';
     const matched = navItems.find((item) => pathname.startsWith(item.path) && item.path !== '/');
     return matched?.label || '生产总览';
   };
