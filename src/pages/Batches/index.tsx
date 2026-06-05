@@ -16,7 +16,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { batches } from '../../data/batches';
-import { samplingRecords } from '../../data/samplings';
+import { useAppStore } from '../../store';
 import type { Batch } from '../../types';
 
 const stageConfig = {
@@ -35,13 +35,20 @@ const stageFilters = [
 ];
 
 export default function Batches() {
+  const { samplingRecords } = useAppStore();
   const [filterStage, setFilterStage] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+  const currentMonthStr = `${currentYear}-${currentMonth}`;
+  const monthLabel = `${currentYear}年${currentMonth}月`;
+
   const ongoingCount = batches.filter((b) => b.stage !== 'ready').length;
   const readyCount = batches.filter((b) => b.stage === 'ready').length;
-  const monthlyStock = batches.filter((b) => b.stockDate.startsWith('2026-06')).length;
-  const monthlyHarvest = batches.filter((b) => b.expectedHarvestDate.startsWith('2026-08')).length;
+  const monthlyStock = batches.filter((b) => b.stockDate.startsWith(currentMonthStr)).length;
+  const monthlyHarvest = batches.filter((b) => b.expectedHarvestDate.startsWith(currentMonthStr)).length;
 
   const filteredBatches = batches.filter((batch) => {
     return filterStage === 'all' || batch.stage === filterStage;
@@ -140,7 +147,7 @@ export default function Batches() {
           </div>
           <div className="mt-3 flex items-center gap-1 text-xs text-secondary-600">
             <CalendarDays className="w-3 h-3" />
-            <span>2026年6月</span>
+            <span>{monthLabel}</span>
           </div>
         </div>
 

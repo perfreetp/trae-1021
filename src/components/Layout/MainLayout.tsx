@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Droplets,
@@ -26,8 +26,16 @@ const navItems = [
 ];
 
 export default function MainLayout() {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const getCurrentPageTitle = () => {
+    const pathname = location.pathname;
+    if (pathname === '/') return navItems[0].label;
+    const matched = navItems.find((item) => pathname.startsWith(item.path) && item.path !== '/');
+    return matched?.label || '生产总览';
+  };
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -101,9 +109,7 @@ export default function MainLayout() {
         {/* Top Bar */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm">
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">
-              {navItems.find((item) => item.path === window.location.pathname)?.label || '生产总览'}
-            </h2>
+            <h2 className="text-lg font-semibold text-slate-800">{getCurrentPageTitle()}</h2>
             <p className="text-xs text-slate-500">
               {new Date().toLocaleDateString('zh-CN', {
                 year: 'numeric',

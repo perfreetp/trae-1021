@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Fish, TrendingUp, Skull, ClipboardList } from 'lucide-react';
-import { samplingRecords, deathRecords } from '../../data/samplings';
+import { Fish, TrendingUp, Skull, ClipboardList, Plus, X } from 'lucide-react';
+import { useAppStore } from '../../store';
+import { batches } from '../../data/batches';
+import type { SamplingRecord, DeathRecord } from '../../types';
 
 const tabs = [
   { id: 'sampling', label: '鱼体抽样', icon: Fish },
@@ -20,8 +22,76 @@ const growthData = [
   { week: '第8周', actual: 1.2, standard: 1.18 },
 ];
 
+const inspectorOptions = ['李质检', '王质检', '张饲养', '刘饲养'];
+const causeOptions = ['正常死亡', '高温应激', '细菌性感染', '寄生虫', '相互残食', '水质问题', '其他'];
+const disposalOptions = ['无害化深埋处理', '焚烧处理', '专业机构回收'];
+
 export default function Quality() {
+  const { samplingRecords, deathRecords, addSamplingRecord, addDeathRecord } = useAppStore();
   const [activeTab, setActiveTab] = useState('sampling');
+  const [showSamplingModal, setShowSamplingModal] = useState(false);
+  const [showDeathModal, setShowDeathModal] = useState(false);
+
+  const [samplingForm, setSamplingForm] = useState<Omit<SamplingRecord, 'id'>>({
+    batchId: batches[0].id,
+    batchNo: batches[0].batchNo,
+    sampleDate: new Date().toISOString().split('T')[0],
+    sampleCount: 30,
+    avgWeight: 0.5,
+    avgLength: 20,
+    inspectorName: '李质检',
+    notes: '',
+  });
+
+  const [deathForm, setDeathForm] = useState<Omit<DeathRecord, 'id'>>({
+    batchId: batches[0].id,
+    batchNo: batches[0].batchNo,
+    date: new Date().toISOString().split('T')[0],
+    count: 5,
+    cause: '正常死亡',
+    disposalMethod: '无害化深埋处理',
+    recorderName: '张饲养',
+  });
+
+  const handleAddSampling = () => {
+    addSamplingRecord(samplingForm);
+    setShowSamplingModal(false);
+    setSamplingForm({
+      batchId: batches[0].id,
+      batchNo: batches[0].batchNo,
+      sampleDate: new Date().toISOString().split('T')[0],
+      sampleCount: 30,
+      avgWeight: 0.5,
+      avgLength: 20,
+      inspectorName: '李质检',
+      notes: '',
+    });
+  };
+
+  const handleAddDeath = () => {
+    addDeathRecord(deathForm);
+    setShowDeathModal(false);
+    setDeathForm({
+      batchId: batches[0].id,
+      batchNo: batches[0].batchNo,
+      date: new Date().toISOString().split('T')[0],
+      count: 5,
+      cause: '正常死亡',
+      disposalMethod: '无害化深埋处理',
+      recorderName: '张饲养',
+    });
+  };
+
+  const handleBatchChange = (batchId: string, formType: 'sampling' | 'death') => {
+    const batch = batches.find((b) => b.id === batchId);
+    if (batch) {
+      if (formType === 'sampling') {
+        setSamplingForm((prev) => ({ ...prev, batchId, batchNo: batch.batchNo }));
+      } else {
+        setDeathForm((prev) => ({ ...prev, batchId, batchNo: batch.batchNo }));
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -30,10 +100,24 @@ export default function Quality() {
           <h1 className="text-2xl font-bold text-slate-800">质量检测管理</h1>
           <p className="text-sm text-slate-500 mt-1">鱼体抽样检测、生长趋势分析、病死鱼登记管理</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
-          <ClipboardList className="w-4 h-4" />
-          新增记录
-        </button>
+        {activeTab === 'sampling' && (
+          <button
+            onClick={() => setShowSamplingModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            新增抽样记录
+          </button>
+        )}
+        {activeTab === 'death' && (
+          <button
+            onClick={() => setShowDeathModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            新增病死记录
+          </button>
+        )}
       </div>
 
       <div className="card">
@@ -98,9 +182,9 @@ export default function Quality() {
                 <p className="text-sm text-slate-500 mt-1">批次 B20260501 生长曲线与标准曲线对比</p>
               </div>
               <select className="input-field w-48">
-                <option>B20260501</option>
-                <option>B20260415</option>
-                <option>B20260320</option>
+                {batches.map((b) => (
+                  <option key={b.id}>{b.batchNo}</option>
+                ))}
               </select>
             </div>
             <div className="h-80">
@@ -190,6 +274,213 @@ export default function Quality() {
           </div>
         )}
       </div>
+
+      {/* 新增抽样记录弹窗 */}
+      {showSamplingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <h3 className="text-lg font-semibold text-slate-800">新增鱼体抽样记录</h3>
+              <button
+                onClick={() => setShowSamplingModal(false)}
+                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">选择批次</label>
+                <select
+                  className="input-field"
+                  value={samplingForm.batchId}
+                  onChange={(e) => handleBatchChange(e.target.value, 'sampling')}
+                >
+                  {batches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.batchNo} - {b.species}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">抽样日期</label>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={samplingForm.sampleDate}
+                    onChange={(e) => setSamplingForm((p) => ({ ...p, sampleDate: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">样本数 (尾)</label>
+                  <input
+                    type="number"
+                    className="input-field"
+                    value={samplingForm.sampleCount}
+                    onChange={(e) => setSamplingForm((p) => ({ ...p, sampleCount: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">平均体重 (kg)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input-field"
+                    value={samplingForm.avgWeight}
+                    onChange={(e) => setSamplingForm((p) => ({ ...p, avgWeight: Number(e.target.value) }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">平均体长 (cm)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="input-field"
+                    value={samplingForm.avgLength}
+                    onChange={(e) => setSamplingForm((p) => ({ ...p, avgLength: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">质检员</label>
+                <select
+                  className="input-field"
+                  value={samplingForm.inspectorName}
+                  onChange={(e) => setSamplingForm((p) => ({ ...p, inspectorName: e.target.value }))}
+                >
+                  {inspectorOptions.map((name) => (
+                    <option key={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">备注</label>
+                <textarea
+                  className="input-field resize-none h-20"
+                  placeholder="填写检测备注..."
+                  value={samplingForm.notes}
+                  onChange={(e) => setSamplingForm((p) => ({ ...p, notes: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 p-5 border-t border-slate-100">
+              <button
+                onClick={() => setShowSamplingModal(false)}
+                className="flex-1 btn-secondary"
+              >
+                取消
+              </button>
+              <button onClick={handleAddSampling} className="flex-1 btn-primary">
+                保存记录
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新增病死鱼记录弹窗 */}
+      {showDeathModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <h3 className="text-lg font-semibold text-slate-800">新增病死鱼登记</h3>
+              <button
+                onClick={() => setShowDeathModal(false)}
+                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">选择批次</label>
+                <select
+                  className="input-field"
+                  value={deathForm.batchId}
+                  onChange={(e) => handleBatchChange(e.target.value, 'death')}
+                >
+                  {batches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.batchNo} - {b.species}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">日期</label>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={deathForm.date}
+                    onChange={(e) => setDeathForm((p) => ({ ...p, date: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">死亡数量 (尾)</label>
+                  <input
+                    type="number"
+                    className="input-field"
+                    value={deathForm.count}
+                    onChange={(e) => setDeathForm((p) => ({ ...p, count: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">死因</label>
+                <select
+                  className="input-field"
+                  value={deathForm.cause}
+                  onChange={(e) => setDeathForm((p) => ({ ...p, cause: e.target.value }))}
+                >
+                  {causeOptions.map((cause) => (
+                    <option key={cause}>{cause}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">处理方式</label>
+                <select
+                  className="input-field"
+                  value={deathForm.disposalMethod}
+                  onChange={(e) => setDeathForm((p) => ({ ...p, disposalMethod: e.target.value }))}
+                >
+                  {disposalOptions.map((method) => (
+                    <option key={method}>{method}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">记录人</label>
+                <select
+                  className="input-field"
+                  value={deathForm.recorderName}
+                  onChange={(e) => setDeathForm((p) => ({ ...p, recorderName: e.target.value }))}
+                >
+                  {inspectorOptions.map((name) => (
+                    <option key={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 p-5 border-t border-slate-100">
+              <button
+                onClick={() => setShowDeathModal(false)}
+                className="flex-1 btn-secondary"
+              >
+                取消
+              </button>
+              <button onClick={handleAddDeath} className="flex-1 btn-primary">
+                保存记录
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

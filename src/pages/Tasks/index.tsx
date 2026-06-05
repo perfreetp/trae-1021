@@ -16,7 +16,7 @@ import {
   Droplets,
   ChevronRight,
 } from 'lucide-react';
-import { tasks as initialTasks } from '../../data/tasks';
+import { useAppStore } from '../../store';
 import type { Task } from '../../types';
 
 const taskTypeLabels: Record<string, string> = {
@@ -62,13 +62,15 @@ const typeColors: Record<string, string> = {
 };
 
 const userNameMap: Record<string, string> = {
-  'u-001': '张三',
-  'u-002': '李四',
-  'u-003': '王五',
+  'u-001': '张师傅',
+  'u-002': '刘师傅',
+  'u-003': '李质检',
+  'u-004': '王质检',
+  'u-005': '陈主管',
 };
 
 export default function Tasks() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { tasks, updateTaskStatus } = useAppStore();
   const [activeType, setActiveType] = useState<string>('all');
 
   const stats = {
@@ -78,23 +80,20 @@ export default function Tasks() {
     cancelled: tasks.filter((t) => t.status === 'cancelled').length,
   };
 
-  const filteredTasks = activeType === 'all'
-    ? tasks
-    : tasks.filter((t) => t.type === activeType);
+  const filteredTasks = activeType === 'all' ? tasks : tasks.filter((t) => t.type === activeType);
 
   const handleStatusChange = (taskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id !== taskId) return task;
-        const statusFlow: Record<string, string> = {
-          pending: 'in_progress',
-          in_progress: 'completed',
-          completed: 'completed',
-          cancelled: 'cancelled',
-        };
-        return { ...task, status: statusFlow[task.status] as Task['status'] };
-      })
-    );
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const statusFlow: Record<string, Task['status']> = {
+      pending: 'in_progress',
+      in_progress: 'completed',
+    };
+    const nextStatus = statusFlow[task.status];
+    if (nextStatus) {
+      updateTaskStatus(taskId, nextStatus);
+    }
   };
 
   const getNextStatusAction = (status: string) => {
@@ -195,13 +194,9 @@ export default function Tasks() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-slate-800 truncate">
-                          {task.title}
-                        </h3>
-                        <span
-                          className={`badge ${typeColors[task.type]} flex items-center gap-1`}
-                        >
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 className="font-semibold text-slate-800 truncate">{task.title}</h3>
+                        <span className={`badge ${typeColors[task.type]} flex items-center gap-1`}>
                           {taskTypeIcons[task.type]}
                           {taskTypeLabels[task.type]}
                         </span>

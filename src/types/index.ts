@@ -142,3 +142,13 @@ export interface Alert {
   timestamp: string;
   resolved: boolean;
 }
+
+export interface InspectionRecord {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  date: string;
+  inspector: string;
+  result: 'normal' | 'abnormal' | 'maintenance';
+  notes: string;
+}
