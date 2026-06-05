@@ -1,0 +1,58 @@
+import type { Alert } from '../types';
+
+export const alerts: Alert[] = [
+  {
+    id: 'alert-001',
+    type: 'oxygen',
+    level: 'danger',
+    message: 'B01池溶氧过低，仅4.2mg/L',
+    poolNo: 'B01',
+    timestamp: '2026-06-05 14:32:00',
+    resolved: false,
+  },
+  {
+    id: 'alert-002',
+    type: 'temperature',
+    level: 'danger',
+    message: 'B01池水温过高，达29.8°C',
+    poolNo: 'B01',
+    timestamp: '2026-06-05 14:30:00',
+    resolved: false,
+  },
+  {
+    id: 'alert-003',
+    type: 'oxygen',
+    level: 'warning',
+    message: 'A03池溶氧偏低，5.2mg/L',
+    poolNo: 'A03',
+    timestamp: '2026-06-05 13:45:00',
+    resolved: false,
+  },
+  {
+    id: 'alert-004',
+    type: 'ph',
+    level: 'warning',
+    message: 'B01池pH偏低，6.5',
+    poolNo: 'B01',
+    timestamp: '2026-06-05 14:20:00',
+    resolved: false,
+  },
+  {
+    id: 'alert-005',
+    type: 'device',
+    level: 'warning',
+    message: '3号增氧机运行异常，震动过大',
+    poolNo: 'B01',
+    timestamp: '2026-06-05 12:15:00',
+    resolved: false,
+  },
+  {
+    id: 'alert-006',
+    type: 'ammonia',
+    level: 'info',
+    message: 'A05池氨氮接近阈值上限',
+    poolNo: 'A05',
+    timestamp: '2026-06-05 10:00:00',
+    resolved: true,
+  },
+];
